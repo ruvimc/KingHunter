@@ -26,7 +26,6 @@ type
     tmRefreshTimer: TTimer;
     btnPrint: TButton;
     cbxLocalPrinters: TComboBox;
-    seCopyCount: TSpinEdit;
     btnSaveSettings: TButton;
     miShow: TMenuItem;
     ApplicationEvents1: TApplicationEvents;
@@ -37,7 +36,6 @@ type
     procedure btnPrintClick(Sender: TObject);
     procedure cbxLocalPrintersCloseUp(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure seCopyCountChange(Sender: TObject);
     procedure btnSaveSettingsClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -66,7 +64,6 @@ var
   slLocalPrintersList: TStringList;
   sLocalPrintersString: string;
   iPrinterIndex: integer;
-  iCopyCount: integer;
   sEndpointServerPath: string;
   stSettings: TSettings;
   bCanClose: boolean;
@@ -102,7 +99,6 @@ end;
 procedure TfrmMain.btnSaveSettingsClick(Sender: TObject);
 begin
   stSettings.WriteSettingsToIni(PRINTER_SETTINGS_SECTION, PRINTER_INDEX, IntToStr(iPrinterIndex));
-  stSettings.WriteSettingsToIni(PRINTER_SETTINGS_SECTION, DEFAULT_PRINTER_COPY_COUNT, IntToStr(iCopyCount));
 end;
 
 procedure TfrmMain.btnUpdateClick(Sender: TObject);
@@ -137,6 +133,7 @@ var
 begin
   for i:= 0 to Printer.Printers.Count - 1 do begin
     cbxLocalPrinters.Items.Add(Printer.Printers[i]);
+    mDebugMemo.Lines.Add(Printer.Printers[i] + ':' + intToStr(i));
   end;
 end;
 
@@ -150,12 +147,13 @@ var
   cReport: TFastReport;
 begin
   cReport := nil;
-  if (aPrinterIndex > 0) and (aPrinterIndex < Printer.Printers.Count) then begin
+  if (aPrinterIndex > -1) and (aPrinterIndex < Printer.Printers.Count) then begin
     try
       cReport := TFastReport.Create;
     with cReport do begin
       CopyCount := aCopyCount;
       PrinterName := cbxLocalPrinters.Items[aPrinterIndex];
+      mDebugMemo.Lines.Add('PrintLocal: ' + PrinterName + ':' + IntToStr(aPrinterIndex));
       AFileLoad := aFilename;
     end;
     cReport.PrintExecute;
@@ -203,7 +201,7 @@ var
   JSONNestedObject: TJSONObject;
   sLinkId, sLink, sPrintID,
   sAppPath, sFilePathTo,
-  sErrorMessage: string;
+  sErrorMessage, sCopyCount: string;
 const
   TEXT_CHECK = '{"links":';
   LOCAL_PRINTER = 'lp';
@@ -237,11 +235,12 @@ begin
       sLinkId := JSONNestedObject.GetValue('quee_status_link', '');
       sLink := JSONNestedObject.GetValue('link', '');
       sPrintID := JSONNestedObject.GetValue('printerId', '');
+      sCopyCount := JSONNestedObject.GetValue('copies', '');
       sResp_Database := '';
       if slPrintersList.IndexOf(sPrintID) <> -1 then begin
         sResp_Database := SetFilesAsPrinted(sLinkId);
         mDebugMemo.Lines.Add(sResp_Database);
-        mDebugMemo.Lines.Add(sPrintID + #13#10 + sLink + #13#10 + sLinkId);
+        mDebugMemo.Lines.Add(sPrintID + #13#10 + sLink + #13#10 + sLinkId + ':' + sCopyCount);
         if LeftStr(sPrintID, 2) =  LOCAL_PRINTER then begin
           sAppPath := ExpandFileName(ExtractFileDir(Application.ExeName) + '\');
           sAppPath := sAppPath + sPrintID + sLinkId + FormatDateTime('ddmmyyyyhhnnsszzz', Now);
@@ -251,7 +250,7 @@ begin
 
           end;
           if (FileExists(sAppPath)) then begin
-            PrintLocalFile(sAppPath, iCopyCount, iPrinterIndex);
+            PrintLocalFile(sAppPath, StrToIntDef(sCopyCount, 0), iPrinterIndex);
             DeleteFile(sAppPath);
           end;
         end
@@ -294,9 +293,6 @@ begin
   stSettings := TSettings.Create;
   //stSettings.WriteSettingsToIni;
   stSettings.ReadSettingsFromIni;
-
-  iCopyCount := stSettings.iDefaultCopyCount;
-  seCopyCount.Value := iCopyCount;
   iPrinterIndex := stSettings.iPrinterID;
   cbxLocalPrinters.ItemIndex := iPrinterIndex;
   sEndpointServerPath := stSettings.sEndpointServer;
@@ -382,11 +378,6 @@ begin
       Exit;
   end;
 
-end;
-
-procedure TfrmMain.seCopyCountChange(Sender: TObject);
-begin
-  iCopyCount := seCopyCount.Value;
 end;
 
 procedure TfrmMain.tmRefreshTimerTimer(Sender: TObject);

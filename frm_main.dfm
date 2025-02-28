@@ -37,21 +37,10 @@ object frmMain: TfrmMain
     object cbxLocalPrinters: TComboBox
       Left = 303
       Top = 8
-      Width = 188
+      Width = 266
       Height = 21
       TabOrder = 0
       OnCloseUp = cbxLocalPrintersCloseUp
-    end
-    object seCopyCount: TSpinEdit
-      Left = 497
-      Top = 8
-      Width = 72
-      Height = 22
-      MaxValue = 1000
-      MinValue = 1
-      TabOrder = 1
-      Value = 1
-      OnChange = seCopyCountChange
     end
     object btnSaveSettings: TButton
       Left = 575
@@ -59,7 +48,7 @@ object frmMain: TfrmMain
       Width = 50
       Height = 25
       Caption = 'SAVE'
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnSaveSettingsClick
     end
     object pnlHidden: TPanel
@@ -70,7 +59,7 @@ object frmMain: TfrmMain
       Align = alLeft
       Caption = 'pnlHidden'
       ShowCaption = False
-      TabOrder = 3
+      TabOrder = 2
       Visible = False
       object btnPrint: TButton
         Left = 111
