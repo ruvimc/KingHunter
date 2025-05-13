@@ -154,6 +154,7 @@ begin
       CopyCount := aCopyCount;
       PrinterName := cbxLocalPrinters.Items[aPrinterIndex];
       mDebugMemo.Lines.Add('PrintLocal: ' + PrinterName + ':' + IntToStr(aPrinterIndex));
+      mDebugMemo.Lines.Add(DateTimeToStr(Now));
       AFileLoad := aFilename;
     end;
     cReport.PrintExecute;
@@ -241,6 +242,7 @@ begin
         sResp_Database := SetFilesAsPrinted(sLinkId);
         mDebugMemo.Lines.Add(sResp_Database);
         mDebugMemo.Lines.Add(sPrintID + #13#10 + sLink + #13#10 + sLinkId + ':' + sCopyCount);
+        mDebugMemo.Lines.Add(DateTimeToStr(Now));
         if LeftStr(sPrintID, 2) =  LOCAL_PRINTER then begin
           sAppPath := ExpandFileName(ExtractFileDir(Application.ExeName) + '\');
           sAppPath := sAppPath + sPrintID + sLinkId + FormatDateTime('ddmmyyyyhhnnsszzz', Now);
